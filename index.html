@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ระบบลา</title>
+
+<style>
+body{font-family:sans-serif;background:#f4f6fb;padding:40px}
+.card{background:white;padding:20px;border-radius:12px}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>รายงานสรุปวันลา</h2>
+
+<table border="1" width="100%">
+<thead>
+<tr>
+<th>ชื่อ</th>
+<th>ตำแหน่ง</th>
+<th>กิจ</th>
+<th>ป่วย</th>
+<th>พักผ่อน</th>
+<th>สาย</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const API_URL = "ใส่ URL exec ตรงนี้";
+
+let cache;
+
+fetch(API_URL)
+.then(r=>r.json())
+.then(data=>{
+
+cache=data;
+
+render();
+
+})
+
+function render(){
+
+let summary={};
+
+cache.staff.forEach(s=>{
+summary[s.name]={pos:s.pos,k:0,p:0,pk:0,s:0};
+});
+
+cache.leaves.forEach(l=>{
+
+if(summary[l.name]){
+
+if(l.type.includes("กิจ")) summary[l.name].k+=l.days;
+else if(l.type.includes("ป่วย")) summary[l.name].p+=l.days;
+else if(l.type.includes("พักผ่อน")) summary[l.name].pk+=l.days;
+else if(l.type.includes("สาย")) summary[l.name].s+=1;
+
+}
+
+});
+
+let html="";
+
+Object.keys(summary).forEach(name=>{
+
+let x=summary[name];
+
+html+=`
+<tr>
+<td>${name}</td>
+<td>${x.pos}</td>
+<td>${x.k}</td>
+<td>${x.p}</td>
+<td>${x.pk}</td>
+<td>${x.s}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("tbody").innerHTML=html;
+
+}
+
+</script>
+
+</body>
+</html>
