@@ -2,11 +2,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ระบบลา</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:sans-serif;background:#f4f6fb;padding:40px}
-.card{background:white;padding:20px;border-radius:12px}
+body{font-family:sans-serif;background:#f6f7fb;padding:30px}
+.card{background:white;padding:20px;border-radius:15px}
 </style>
 
 </head>
@@ -15,83 +17,76 @@ body{font-family:sans-serif;background:#f4f6fb;padding:40px}
 
 <div class="card">
 
-<h2>รายงานสรุปวันลา</h2>
+<h3>Dashboard ศพด.จะแนะ</h3>
 
-<table border="1" width="100%">
-<thead>
-<tr>
-<th>ชื่อ</th>
-<th>ตำแหน่ง</th>
-<th>กิจ</th>
-<th>ป่วย</th>
-<th>พักผ่อน</th>
-<th>สาย</th>
-</tr>
-</thead>
+<div class="row">
 
-<tbody id="tbody"></tbody>
+<div class="col">
+<h5>บุคลากร</h5>
+<h2 id="stat-total-staff">0</h2>
+</div>
 
-</table>
+<div class="col">
+<h5>ลากิจ</h5>
+<h2 id="stat-kij">0</h2>
+</div>
+
+<div class="col">
+<h5>ลาป่วย</h5>
+<h2 id="stat-puay">0</h2>
+</div>
+
+</div>
+
+<canvas id="leaveChart"></canvas>
 
 </div>
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwAqwa4zv_qc6ar2AbaCLkDtzOHiDJGEOVWYsiaeFooloyTqcpUlC-d3PyuEoK2PdE_/exec";
+// ⭐ ใส่ exec URL
+const API_URL="https://script.google.com/macros/s/AKfycbwV_p2Rb9BBYu_xjkRaheHdCozdtkVwtxvBFQ-P7tSe-oF2emAX1IxiUehJFixXp0Wj/exec";
 
-let cache;
+let db={};
 
 fetch(API_URL)
-.then(r=>r.json())
+.then(res=>res.json())
 .then(data=>{
-
-cache=data;
-
-render();
-
+db=data;
+updateDashboard();
 })
-
-function render(){
-
-let summary={};
-
-cache.staff.forEach(s=>{
-summary[s.name]={pos:s.pos,k:0,p:0,pk:0,s:0};
+.catch(err=>{
+alert("โหลดข้อมูลไม่ได้ ตรวจสอบ Apps Script Anyone");
+console.log(err);
 });
 
-cache.leaves.forEach(l=>{
+function updateDashboard(){
 
-if(summary[l.name]){
+let k=0,p=0;
 
-if(l.type.includes("กิจ")) summary[l.name].k+=l.days;
-else if(l.type.includes("ป่วย")) summary[l.name].p+=l.days;
-else if(l.type.includes("พักผ่อน")) summary[l.name].pk+=l.days;
-else if(l.type.includes("สาย")) summary[l.name].s+=1;
+db.leaves.forEach(l=>{
 
+if(l.type.includes('กิจ')) k+=l.days;
+if(l.type.includes('ป่วย')) p+=l.days;
+
+});
+
+document.getElementById('stat-total-staff').innerText=db.staff.length;
+document.getElementById('stat-kij').innerText=k;
+document.getElementById('stat-puay').innerText=p;
+
+new Chart(document.getElementById('leaveChart'),{
+
+type:'doughnut',
+
+data:{
+labels:['ลากิจ','ลาป่วย'],
+datasets:[{
+data:[k,p]
+}]
 }
 
 });
-
-let html="";
-
-Object.keys(summary).forEach(name=>{
-
-let x=summary[name];
-
-html+=`
-<tr>
-<td>${name}</td>
-<td>${x.pos}</td>
-<td>${x.k}</td>
-<td>${x.p}</td>
-<td>${x.pk}</td>
-<td>${x.s}</td>
-</tr>
-`;
-
-});
-
-document.getElementById("tbody").innerHTML=html;
 
 }
 
